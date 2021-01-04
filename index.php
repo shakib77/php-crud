@@ -4,6 +4,8 @@
 <?php
 
     $insert = false;
+    $update = false;
+    $delete = false;
 
     $servername = "localhost";
     $username = "root";
@@ -15,18 +17,41 @@
     if (!$conn) {
         die("Sorry we failed to connect: ". mysqli_connect_error());
     }
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        $title = $_POST["title"];
-        $description = $_POST["description"];
 
-        $sql = " INSERT INTO  `notes` (`title`, `description`) VALUES ('$title', '$description')";
+    if (isset($_GET['delete'])) {
+        $sno = $_GET['delete'];
+        $delete = true;
+        $sql = " DELETE FROM `notes` WHERE `sno` = $sno";
         $result = mysqli_query($conn, $sql);
+    }
 
-        if ($result) {
-//            echo "The record has been inserted successfully<br>";
-            $insert = true;
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+//        --update record--
+        if (isset($_POST['snoEdit'])) {
+            $sno = $_POST["snoEdit"];
+            $title = $_POST["titleEdit"];
+            $description = $_POST["descriptionEdit"];
+
+            $sql = "UPDATE `notes` SET `title` = '$title', `description` = '$description' WHERE `notes`.`sno` = $sno";
+            $result = mysqli_query($conn, $sql);
+            if ($result) {
+                $update = true;
+            } else {
+                echo "Note data is not updated";
+            }
         } else {
-            echo "The record was not inserted successfully because of this error --> " . mysqli_error($conn);
+            $title = $_POST["title"];
+            $description = $_POST["description"];
+
+            $sql = " INSERT INTO  `notes` (`title`, `description`) VALUES ('$title', '$description')";
+            $result = mysqli_query($conn, $sql);
+
+            if ($result) {
+                $insert = true;
+            } else {
+                echo "The record was not inserted successfully because of this error --> " . mysqli_error($conn);
+            }
         }
     }
 ?>
@@ -61,12 +86,6 @@
 <body>
 
     <!--    Edit modal starts-->
-
-    <!-- Button trigger modal -->
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal">
-        Edit Modal
-    </button>
-
     <!-- Modal -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModal" aria-hidden="true">
         <div class="modal-dialog">
@@ -75,24 +94,23 @@
                     <h5 class="modal-title" id="editModalLabel">Edit note</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <form action="/projects/crud/index.php" method="POST">
-                        <input type="hidden" name="snoEdit" id="snoEdit">
-                        <div class="mb-3">
-                            <label for="title" class="form-label">Note Title</label>
-                            <input type="text" class="form-control" id="titleEdit" name="titleEdit">
-                        </div>
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Note Description</label>
-                            <textarea class="form-control" id="descriptionEdit" name="descriptionEdit" rows="3"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Update Note</button>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Save changes</button>
-                </div>
+                <form action="/projects/crud/index.php" method="POST">
+                    <div class="modal-body">
+                            <input type="hidden" name="snoEdit" id="snoEdit">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Note Title</label>
+                                <input type="text" class="form-control" id="titleEdit" name="titleEdit">
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Note Description</label>
+                                <textarea class="form-control" id="descriptionEdit" name="descriptionEdit" rows="3"></textarea>
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -137,10 +155,26 @@
                 </div>";
         }
     ?>
+    <?php
+    if ($update) {
+        echo "<div class='alert alert-success alert-dismissible fade show' role='alert'>
+                    <strong>Success!</strong> Your note has been updated successfully.
+                    <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+                </div>";
+    }
+    ?>
+    <?php
+    if ($delete) {
+        echo "<div class='alert alert-success alert-dismissible fade show' role='alert'>
+                    <strong>Success!</strong> Your note has been deleted successfully.
+                    <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+                </div>";
+    }
+    ?>
 
     <div class="container my-4">
         <h2>Add a note</h2>
-        <form action="/projects/crud/index.php?update=true" method="post">
+        <form action="/projects/crud/index.php" method="post">
             <div class="mb-3">
                 <label for="title" class="form-label">Note Title</label>
                 <input type="text" class="form-control" id="title" name="title">
@@ -177,8 +211,8 @@
                 <td>". $row['title'] . "</td>
                 <td>". $row['description'] . "</td>
                 <td>
-                    <button class='edit btn btn-sm btn-primary' id=".$row['sno'].">Edit</button>
-                    <a class='del' href='/del'>Delete</a>
+                    <button class='edit btn btn-sm btn-warning' id=".$row['sno'].">Edit</button>
+                    <button class='delete btn btn-sm btn-danger' id= d".$row['sno'].">Delete</button>
                 </td>
                 
             </tr>";
@@ -211,6 +245,24 @@
                     keyboard: false
                 })
                 editModal.toggle();
+
+            })
+        })
+
+        deletes = document.getElementsByClassName("delete");
+        Array.from(deletes).forEach((element) => {
+            element.addEventListener("click", (e) => {
+                console.log("delete", );
+                let sno = e.target.id.substr(1,);
+                if (confirm("Are you sure to want to delete this note!")) {
+                    console.log("yes");
+                    window.location = `/projects/crud/index.php?delete=${sno}`;
+
+                    // create a from and use post request to submit form
+
+                } else {
+                    console.log("no");
+                }
 
             })
         })
