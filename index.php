@@ -56,10 +56,11 @@
     </script>
 
     <title>PHP CRUD - Project-eNotes</title>
+
 </head>
 <body>
 
-    <!--    Edit modal-->
+    <!--    Edit modal starts-->
 
     <!-- Button trigger modal -->
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal">
@@ -71,11 +72,22 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">Modal title</h5>
+                    <h5 class="modal-title" id="editModalLabel">Edit note</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    ...
+                    <form action="/projects/crud/index.php" method="POST">
+                        <input type="hidden" name="snoEdit" id="snoEdit">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Note Title</label>
+                            <input type="text" class="form-control" id="titleEdit" name="titleEdit">
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Note Description</label>
+                            <textarea class="form-control" id="descriptionEdit" name="descriptionEdit" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Note</button>
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -128,7 +140,7 @@
 
     <div class="container my-4">
         <h2>Add a note</h2>
-        <form action="/projects/crud/index.php" method="post">
+        <form action="/projects/crud/index.php?update=true" method="post">
             <div class="mb-3">
                 <label for="title" class="form-label">Note Title</label>
                 <input type="text" class="form-control" id="title" name="title">
@@ -165,13 +177,14 @@
                 <td>". $row['title'] . "</td>
                 <td>". $row['description'] . "</td>
                 <td>
-                    <a href='/edit'>Edit</a>
-                    <a href='/del'>Delete</a>
+                    <button class='edit btn btn-sm btn-primary' id=".$row['sno'].">Edit</button>
+                    <a class='del' href='/del'>Delete</a>
                 </td>
                 
             </tr>";
             }
             ?>
+
             </tbody>
         </table>
     </div>
@@ -180,5 +193,27 @@
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
+
+    <script>
+        edits = document.getElementsByClassName("edit");
+        Array.from(edits).forEach((element) => {
+            element.addEventListener("click", (e) => {
+                console.log("edit", );
+                let tr = e.target.parentNode.parentNode;
+                let title = tr.getElementsByTagName("td")[0].innerText;
+                let description = tr.getElementsByTagName("td")[1].innerText;
+                console.log(title, description);
+                titleEdit.value = title;
+                descriptionEdit.value = description;
+                snoEdit.value = e.target.id;
+
+                let editModal = new bootstrap.Modal(document.getElementById('editModal'), {
+                    keyboard: false
+                })
+                editModal.toggle();
+
+            })
+        })
+    </script>
 </body>
 </html>
